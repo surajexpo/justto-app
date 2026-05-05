@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Users/gs/.pub-cache/hosted/pub.dev/flutter_keyboard_visibility-5.4.1/android/**)",
+      "Bash(dart analyze *)"
+    ]
+  }
+}

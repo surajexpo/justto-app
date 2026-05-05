@@ -59,14 +59,15 @@ class BannerView extends StatelessWidget {
                         Get.find<ItemController>().navigateToItemPage(item, context);
                       }else if(bannerDataList[index] is Store) {
                         Store? store = bannerDataList[index];
-                        if(isFeatured && (AddressHelper.getUserAddressFromSharedPref()!.zoneData != null && AddressHelper.getUserAddressFromSharedPref()!.zoneData!.isNotEmpty)) {
+                        final savedAddr = AddressHelper.getUserAddressFromSharedPref();
+                        if(isFeatured && savedAddr != null && (savedAddr.zoneData != null && savedAddr.zoneData!.isNotEmpty)) {
                           for(ModuleModel module in Get.find<SplashController>().moduleList!) {
                             if(module.id == store!.moduleId) {
                               Get.find<SplashController>().setModule(module);
                               break;
                             }
                           }
-                          ZoneData zoneData = AddressHelper.getUserAddressFromSharedPref()!.zoneData!.firstWhere((data) => data.id == store!.zoneId);
+                          ZoneData zoneData = savedAddr.zoneData!.firstWhere((data) => data.id == store!.zoneId);
 
                           Modules module = zoneData.modules!.firstWhere((module) => module.id == store!.moduleId);
                           Get.find<SplashController>().setModule(ModuleModel(id: module.id, moduleName: module.moduleName, moduleType: module.moduleType, themeId: module.themeId, storesCount: module.storesCount));

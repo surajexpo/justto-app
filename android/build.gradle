@@ -23,6 +23,11 @@ subprojects {
                     sourceCompatibility JavaVersion.VERSION_17
                     targetCompatibility JavaVersion.VERSION_17
                 }
+
+                // AGP 8+ requires namespace; inject from group for old plugins that omit it
+                if (androidExt.namespace == null) {
+                    androidExt.namespace = project.group.toString()
+                }
             }
 
             project.tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {

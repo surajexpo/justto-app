@@ -35,13 +35,15 @@ import 'package:sixam_mart/helper/responsive_helper.dart';
 import 'package:sixam_mart/helper/route_helper.dart';
 import 'package:sixam_mart/util/app_constants.dart';
 import 'package:sixam_mart/util/dimensions.dart';
-import 'package:sixam_mart/util/images.dart';
 import 'package:sixam_mart/util/styles.dart';
+import 'package:sixam_mart/common/widgets/cart_widget.dart';
+import 'package:sixam_mart/common/widgets/custom_image.dart';
 import 'package:sixam_mart/common/widgets/item_view.dart';
 import 'package:sixam_mart/common/widgets/menu_drawer.dart';
 import 'package:sixam_mart/common/widgets/paginated_list_view.dart';
 import 'package:sixam_mart/common/widgets/web_menu_bar.dart';
 import 'package:sixam_mart/features/home/screens/web_new_home_screen.dart';
+import 'package:sixam_mart/features/home/widgets/views/banner_view.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:sixam_mart/features/home/widgets/module_view.dart';
@@ -128,7 +130,7 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     });
 
-    if(!ResponsiveHelper.isWeb()) {
+    if(!ResponsiveHelper.isWeb() && AddressHelper.getUserAddressFromSharedPref() != null) {
       Get.find<LocationController>().getZone(
         AddressHelper.getUserAddressFromSharedPref()!.latitude,
         AddressHelper.getUserAddressFromSharedPref()!.longitude, false, updateInAddress: true,
@@ -276,47 +278,87 @@ class _HomeScreenState extends State<HomeScreen> {
                     title: Center(child: Container(
                       width: Dimensions.webMaxWidth, height: Get.find<LocalizationController>().isLtr ? 60 : 70, color: Theme.of(context).colorScheme.surface,
                       child: Row(children: [
-                        (splashController.module != null && splashController.configModel!.module == null && splashController.moduleList != null && splashController.moduleList!.length != 1) ? InkWell(
-                          onTap: () {
-                            splashController.removeModule();
-                            Get.find<StoreController>().resetStoreData();
-                          },
-                          child: Image.asset(Images.moduleIcon, height: 25, width: 25, color: Theme.of(context).textTheme.bodyLarge!.color),
-                        ) : const SizedBox(),
-                        SizedBox(width: (splashController.module != null && splashController.configModel!.module == null && splashController.moduleList != null && splashController.moduleList!.length != 1) ? Dimensions.paddingSizeSmall : 0),
 
-                        Expanded(child: InkWell(
-                          onTap: () => Get.find<LocationController>().navigateToLocationScreen('home'),
-                          child: Padding(
-                            padding: EdgeInsets.symmetric(
-                              vertical: Dimensions.paddingSizeSmall,
-                              horizontal: ResponsiveHelper.isDesktop(context) ? Dimensions.paddingSizeSmall : 0,
-                            ),
-                            child: GetBuilder<LocationController>(builder: (locationController) {
-                              return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                Text(
-                                  AuthHelper.isLoggedIn() ? AddressHelper.getUserAddressFromSharedPref()!.addressType!.tr : 'your_location'.tr,
-                                  style: robotoMedium.copyWith(color: Theme.of(context).textTheme.bodyLarge!.color, fontSize: Dimensions.fontSizeDefault),
-                                  maxLines: 1, overflow: TextOverflow.ellipsis,
-                                ),
-
-                                Row(children: [
-                                  Flexible(
-                                    child: Text(
-                                      AddressHelper.getUserAddressFromSharedPref()!.address!,
-                                      style: robotoRegular.copyWith(color: Theme.of(context).disabledColor, fontSize: Dimensions.fontSizeSmall),
-                                      maxLines: 1, overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-
-                                  Icon(Icons.expand_more, color: Theme.of(context).disabledColor, size: 18),
-
-                                ]),
-
-                              ]);
-                            }),
+                        // App logo
+                        Text(
+                          AppConstants.appName,
+                          style: robotoBlack.copyWith(
+                            color: Theme.of(context).primaryColor,
+                            fontSize: 22,
+                            letterSpacing: -0.5,
                           ),
-                        )),
+                        ),
+                        const SizedBox(width: Dimensions.paddingSizeSmall),
+
+                        // Module chips (horizontal scroll selector)
+                        splashController.configModel!.module == null && splashController.moduleList != null && splashController.moduleList!.isNotEmpty
+                            ? Expanded(
+                                child: SingleChildScrollView(
+                                  scrollDirection: Axis.horizontal,
+                                  child: Row(
+                                    children: List.generate(splashController.moduleList!.length, (index) {
+                                      final mod = splashController.moduleList![index];
+                                      final isSelected = splashController.module?.id == mod.id;
+                                      return GestureDetector(
+                                        onTap: () {
+                                          splashController.switchModule(index, true);
+                                          Get.find<StoreController>().resetStoreData();
+                                        },
+                                        child: AnimatedContainer(
+                                          duration: const Duration(milliseconds: 200),
+                                          margin: const EdgeInsets.only(right: Dimensions.paddingSizeSmall),
+                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                          decoration: BoxDecoration(
+                                            color: isSelected ? Theme.of(context).primaryColor : Theme.of(context).cardColor,
+                                            borderRadius: BorderRadius.circular(20),
+                                            border: Border.all(
+                                              color: isSelected
+                                                  ? Theme.of(context).primaryColor
+                                                  : Theme.of(context).disabledColor.withValues(alpha: 0.35),
+                                            ),
+                                            boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4, spreadRadius: 0)],
+                                          ),
+                                          child: Row(mainAxisSize: MainAxisSize.min, children: [
+                                            CustomImage(
+                                              image: '${mod.iconFullUrl}',
+                                              height: 18, width: 18,
+                                            ),
+                                            const SizedBox(width: 5),
+                                            Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+                                              Text(
+                                                mod.moduleName ?? '',
+                                                style: robotoMedium.copyWith(
+                                                  fontSize: Dimensions.fontSizeSmall,
+                                                  color: isSelected ? Colors.white : Theme.of(context).textTheme.bodyLarge!.color,
+                                                ),
+                                              ),
+                                              Text(
+                                                '${mod.moduleType?.replaceAll('_', ' ').capitalizeFirst ?? ''} Mode',
+                                                style: robotoRegular.copyWith(
+                                                  fontSize: Dimensions.fontSizeOverSmall,
+                                                  color: isSelected ? Colors.white70 : Theme.of(context).disabledColor,
+                                                ),
+                                              ),
+                                            ]),
+                                          ]),
+                                        ),
+                                      );
+                                    }),
+                                  ),
+                                ),
+                              )
+                            : const Spacer(),
+
+                        // Cart icon
+                        InkWell(
+                          onTap: () => Get.toNamed(RouteHelper.getCartRoute()),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeSmall),
+                            child: CartWidget(color: Theme.of(context).textTheme.bodyLarge!.color, size: 22),
+                          ),
+                        ),
+
+                        // Bell icon
                         InkWell(
                           child: GetBuilder<NotificationController>(builder: (notificationController) {
                             return Stack(children: [
@@ -337,13 +379,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
 
                   /// Search Button
-                  !showMobileModule && !isTaxi ? SliverPersistentHeader(
+                  !isTaxi ? SliverPersistentHeader(
                     pinned: true,
                     delegate: SliverDelegate(callback: (val){}, child: Center(child: Container(
                       height: 50, width: Dimensions.webMaxWidth,
                       color: searchBgShow ? Get.find<ThemeController>().darkTheme ? Theme.of(context).colorScheme.surface : Theme.of(context).cardColor : null,
                       padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeSmall),
-                      child: isTaxi? Container(color: Theme.of(context).primaryColor): InkWell(
+                      child: InkWell(
                         onTap: () => Get.toNamed(RouteHelper.getSearchRoute()),
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeSmall),
@@ -355,21 +397,32 @@ class _HomeScreenState extends State<HomeScreen> {
                             boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 5, spreadRadius: 1)],
                           ),
                           child: Row(children: [
-                            Icon(
-                              CupertinoIcons.search, size: 25,
-                              color: Theme.of(context).primaryColor,
-                            ),
+                            Icon(CupertinoIcons.search, size: 22, color: Theme.of(context).primaryColor),
                             const SizedBox(width: Dimensions.paddingSizeExtraSmall),
                             Expanded(child: Text(
-                              Get.find<SplashController>().configModel!.moduleConfig!.module!.showRestaurantText! ? 'search_food_or_restaurant'.tr : 'search_item_or_store'.tr,
-                              style: robotoRegular.copyWith(
-                                fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).hintColor,
-                              ),
+                              (splashController.module != null && splashController.configModel?.moduleConfig?.module?.showRestaurantText == true)
+                                  ? 'search_food_or_restaurant'.tr
+                                  : 'search_item_or_store'.tr,
+                              style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).hintColor),
                             )),
+                            Container(width: 1, height: 20, color: Theme.of(context).disabledColor.withValues(alpha: 0.3)),
+                            const SizedBox(width: Dimensions.paddingSizeExtraSmall),
+                            Icon(CupertinoIcons.mic, size: 20, color: Theme.of(context).primaryColor),
                           ]),
                         ),
                       ),
                     ))),
+                  ) : const SliverToBoxAdapter(),
+
+                  /// Banner — between search bar and content (module-selection state only;
+                  /// individual module screens carry their own banners)
+                  !isTaxi ? SliverToBoxAdapter(
+                    child: showMobileModule
+                        ? Container(
+                            color: Theme.of(context).disabledColor.withValues(alpha: 0.05),
+                            child: const BannerView(isFeatured: true),
+                          )
+                        : const SizedBox(),
                   ) : const SliverToBoxAdapter(),
 
                   SliverToBoxAdapter(

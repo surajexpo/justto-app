@@ -1,7 +1,6 @@
 import 'package:get/get.dart';
 import 'package:sixam_mart/features/auth/controllers/auth_controller.dart';
 import 'package:sixam_mart/features/favourite/controllers/favourite_controller.dart';
-import 'package:sixam_mart/features/location/controllers/location_controller.dart';
 import 'package:sixam_mart/features/notification/domain/models/notification_body_model.dart';
 import 'package:sixam_mart/features/splash/controllers/splash_controller.dart';
 import 'package:sixam_mart/helper/address_helper.dart';
@@ -57,14 +56,10 @@ import 'package:sixam_mart/util/app_constants.dart';
 
   Future<void> _forLoggedInUserRouteProcess() async {
     Get.find<AuthController>().updateToken();
-    if (AddressHelper.getUserAddressFromSharedPref() != null) {
-      if(Get.find<SplashController>().module != null) {
-        await Get.find<FavouriteController>().getFavouriteList();
-      }
-      Get.offNamed(RouteHelper.getInitialRoute(fromSplash: true));
-    } else {
-      Get.find<LocationController>().navigateToLocationScreen('splash', offNamed: true);
+    if (AddressHelper.getUserAddressFromSharedPref() != null && Get.find<SplashController>().module != null) {
+      await Get.find<FavouriteController>().getFavouriteList();
     }
+    Get.offNamed(RouteHelper.getInitialRoute(fromSplash: true));
   }
 
   void _newlyRegisteredRouteProcess() {
@@ -76,11 +71,7 @@ import 'package:sixam_mart/util/app_constants.dart';
   }
 
   void _forGuestUserRouteProcess() {
-    if (AddressHelper.getUserAddressFromSharedPref() != null) {
-      Get.offNamed(RouteHelper.getInitialRoute(fromSplash: true));
-    } else {
-      Get.find<LocationController>().navigateToLocationScreen('splash', offNamed: true);
-    }
+    Get.offNamed(RouteHelper.getInitialRoute(fromSplash: true));
   }
 
   Future<void> _handleUserRouting() async {

@@ -1,7 +1,6 @@
 import 'package:shimmer_animation/shimmer_animation.dart';
 import 'package:sixam_mart/common/widgets/address_widget.dart';
 import 'package:sixam_mart/common/widgets/custom_ink_well.dart';
-import 'package:sixam_mart/features/banner/controllers/banner_controller.dart';
 import 'package:sixam_mart/features/location/controllers/location_controller.dart';
 import 'package:sixam_mart/features/splash/controllers/splash_controller.dart';
 import 'package:sixam_mart/features/address/controllers/address_controller.dart';
@@ -16,7 +15,6 @@ import 'package:sixam_mart/common/widgets/custom_loader.dart';
 import 'package:sixam_mart/common/widgets/title_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:sixam_mart/features/home/widgets/banner_view.dart';
 import 'package:sixam_mart/features/home/widgets/popular_store_view.dart';
 
 class ModuleView extends StatelessWidget {
@@ -27,50 +25,80 @@ class ModuleView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
 
-      GetBuilder<BannerController>(builder: (bannerController) {
-        return const BannerView(isFeatured: true);
-      }),
-
-      splashController.moduleList != null ? splashController.moduleList!.isNotEmpty ? GridView.builder(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3, mainAxisSpacing: Dimensions.paddingSizeSmall,
-          crossAxisSpacing: Dimensions.paddingSizeSmall, childAspectRatio: (1/1),
-        ),
-        padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
-        itemCount: splashController.moduleList!.length,
-        shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
-        itemBuilder: (context, index) {
-          return Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-              color: Theme.of(context).cardColor,
-              border: Border.all(color: Theme.of(context).primaryColor, width: 0.15),
-              boxShadow: [BoxShadow(color: Theme.of(context).primaryColor.withValues(alpha: 0.1), spreadRadius: 1, blurRadius: 3)],
+      splashController.moduleList != null ? splashController.moduleList!.isNotEmpty ? Padding(
+        padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeSmall, vertical: Dimensions.paddingSizeDefault),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('select_module'.tr, style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeLarge)),
+          const SizedBox(height: Dimensions.paddingSizeSmall),
+          GridView.builder(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisSpacing: Dimensions.paddingSizeDefault,
+              crossAxisSpacing: Dimensions.paddingSizeDefault,
+              childAspectRatio: 1.4,
             ),
-            child: CustomInkWell(
-              onTap: () => splashController.switchModule(index, true),
-              radius: Dimensions.radiusDefault,
-              child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
-                  child: CustomImage(
-                    image: '${splashController.moduleList![index].iconFullUrl}',
-                    height: 50, width: 50,
+            itemCount: splashController.moduleList!.length,
+            shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
+            itemBuilder: (context, index) {
+              // Cycle through accent colours for visual variety
+              final List<Color> accentColors = [
+                const Color(0xFFFF8C00),
+                const Color(0xFF2196F3),
+                const Color(0xFF4CAF50),
+                const Color(0xFF9C27B0),
+                const Color(0xFFE91E63),
+                const Color(0xFF00BCD4),
+              ];
+              final accent = accentColors[index % accentColors.length];
+              return CustomInkWell(
+                onTap: () => splashController.switchModule(index, true),
+                radius: Dimensions.radiusLarge,
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(Dimensions.radiusLarge),
+                    gradient: LinearGradient(
+                      colors: [accent.withValues(alpha: 0.15), accent.withValues(alpha: 0.05)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    border: Border.all(color: accent.withValues(alpha: 0.3), width: 1.2),
+                    boxShadow: [BoxShadow(color: accent.withValues(alpha: 0.12), blurRadius: 8, spreadRadius: 1, offset: const Offset(0, 3))],
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
+                    child: Row(children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: accent.withValues(alpha: 0.18),
+                          borderRadius: BorderRadius.circular(Dimensions.radiusMedium),
+                        ),
+                        child: CustomImage(
+                          image: '${splashController.moduleList![index].iconFullUrl}',
+                          height: 36, width: 36,
+                        ),
+                      ),
+                      const SizedBox(width: Dimensions.paddingSizeSmall),
+                      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: [
+                        Text(
+                          splashController.moduleList![index].moduleName ?? '',
+                          maxLines: 1, overflow: TextOverflow.ellipsis,
+                          style: robotoBold.copyWith(fontSize: Dimensions.fontSizeDefault),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '${splashController.moduleList![index].moduleType?.replaceAll('_', ' ').capitalizeFirst ?? ''} Mode',
+                          maxLines: 1, overflow: TextOverflow.ellipsis,
+                          style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).disabledColor),
+                        ),
+                      ])),
+                    ]),
                   ),
                 ),
-                const SizedBox(height: Dimensions.paddingSizeSmall),
-
-                Center(child: Text(
-                  splashController.moduleList![index].moduleName!,
-                  textAlign: TextAlign.center, maxLines: 2, overflow: TextOverflow.ellipsis,
-                  style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeSmall),
-                )),
-
-              ]),
-            ),
-          );
-        },
+              );
+            },
+          ),
+        ]),
       ) : Center(child: Padding(
         padding: const EdgeInsets.only(top: Dimensions.paddingSizeSmall), child: Text('no_module_found'.tr),
       )) : ModuleShimmer(isEnabled: splashController.moduleList == null),
